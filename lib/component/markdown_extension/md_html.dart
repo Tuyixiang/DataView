@@ -1,0 +1,140 @@
+// Flutter imports:
+import "package:flutter/material.dart";
+
+// Package imports:
+import "package:html/dom.dart" as h;
+import "package:html/dom_parsing.dart";
+import "package:html/parser.dart";
+import "package:markdown/markdown.dart" as m;
+import "package:markdown_widget/markdown_widget.dart";
+
+class CustomTextNode extends ElementNode {
+  final String text;
+  final MarkdownConfig config;
+  final WidgetVisitor visitor;
+  CustomTextNode(this.text, this.config, this.visitor);
+  @override
+  void onAccepted(SpanNode parent) {
+    final textStyle = config.p.textStyle.merge(parentStyle);
+    children.clear();
+    if (!text.contains(htmlRep)) {
+      accept(TextNode(text: text, style: textStyle));
+      return;
+    }
+    final spans = parseHtml(
+      m.Text(text),
+      visitor: WidgetVisitor(
+        config: visitor.config,
+        generators: visitor.generators,
+      ),
+      parentStyle: parentStyle,
+    );
+    for (var element in spans) {
+      accept(element);
+    }
+  }
+}
+
+final supportedMarkdownTags = Set<String>.unmodifiable(
+  MarkdownTag.values.map((e) => e.name),
+);
+
+final skippedTags = {"div", "body", "b"};
+
+final RegExp tableRep = RegExp(
+  r"<table[^>]*>",
+  multiLine: true,
+  caseSensitive: true,
+);
+
+final RegExp htmlRep = RegExp(
+  r"""<([\w\.:\-]+)(\s+[\w\.:\-]+(=([\w\.:\-]+|".*?"|'.*?'))?)*\s*/?>""",
+);
+
+///parse [m.Node] to [h.Node]
+List<SpanNode> parseHtml(
+  m.Text node, {
+  ValueCallback<dynamic>? onError,
+  WidgetVisitor? visitor,
+  TextStyle? parentStyle,
+}) {
+  try {
+    final text = node.textContent.replaceAll(
+      visitor?.splitRegExp ?? WidgetVisitor.defaultSplitRegExp,
+      "",
+    );
+    if (!text.contains(htmlRep)) return [TextNode(text: node.text)];
+    h.DocumentFragment document = parseFragment(text);
+    return HtmlToSpanVisitor(
+      visitor: visitor,
+      parentStyle: parentStyle,
+    ).toVisit(document.nodes.toList());
+  } catch (e) {
+    onError?.call(e);
+    return [TextNode(text: node.text)];
+  }
+}
+
+class HtmlElement extends m.Element {
+  @override
+  final String textContent;
+
+  HtmlElement(super.tag, super.children, this.textContent);
+}
+
+class HtmlToSpanVisitor extends TreeVisitor {
+  final List<SpanNode> _spans = [];
+  final List<SpanNode> _spansStack = [];
+  final WidgetVisitor visitor;
+  final TextStyle parentStyle;
+
+  HtmlToSpanVisitor({WidgetVisitor? visitor, TextStyle? parentStyle})
+    : visitor = visitor ?? WidgetVisitor(),
+      parentStyle = parentStyle ?? TextStyle();
+
+  List<SpanNode> toVisit(List<h.Node> nodes) {
+    _spans.clear();
+    for (final node in nodes) {
+      final emptyNode = ConcreteElementNode(style: parentStyle);
+      _spans.add(emptyNode);
+      _spansStack.add(emptyNode);
+      visit(node);
+      _spansStack.removeLast();
+    }
+    final result = List.of(_spans);
+    _spans.clear();
+    _spansStack.clear();
+    return result;
+  }
+
+  @override
+  void visitText(h.Text node) {
+    final last = _spansStack.last;
+    if (last is ElementNode) {
+      final textNode = TextNode(text: node.text);
+      last.accept(textNode);
+    }
+  }
+
+  @override
+  void visitElement(h.Element node) {
+    final localName = node.localName ?? "p";
+    final mdElement = m.Element(localName, []);
+    mdElement.attributes.addAll(node.attributes.cast());
+    var spanNode = visitor.getNodeByElement(mdElement, visitor.config);
+    if (spanNode is! ElementNode) {
+      final n = ConcreteElementNode(tag: localName, style: parentStyle);
+      n.accept(spanNode);
+      spanNode = n;
+    }
+    final last = _spansStack.last;
+    if (last is ElementNode) {
+      last.accept(spanNode);
+    }
+    _spansStack.add(spanNode);
+    for (var child in node.nodes.toList(growable: false)) {
+      visit(child);
+    }
+    _spansStack.removeLast();
+  }
+}
