@@ -43,13 +43,13 @@ class _PageMenuState extends State<PageMenu> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: .min,
               children: [
                 SizedBox(height: AppLayout.labelHeight),
                 IntrinsicWidth(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: .stretch,
+                    mainAxisSize: .min,
                     children: widget.actions
                         .map(
                           (action) => LabelCard(

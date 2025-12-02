@@ -1,5 +1,44 @@
 part of "data_type.dart";
 
+enum DisplaySizeEnum {
+  card,
+  page,
+  cell;
+
+  int get charLimit {
+    switch (this) {
+      case .card:
+        return CARD_CHAR_LIMIT;
+      case .page:
+        return PAGE_CHAR_LIMIT;
+      case .cell:
+        return CELL_CHAR_LIMIT;
+    }
+  }
+
+  int get stringLimit {
+    switch (this) {
+      case .card:
+        return CARD_STRING_LIMIT;
+      case .page:
+        return PAGE_STRING_LIMIT;
+      case .cell:
+        return CELL_CHAR_LIMIT;
+    }
+  }
+
+  int get lineLimit {
+    switch (this) {
+      case .card:
+        return 80;
+      case .page:
+        return 320;
+      case .cell:
+        return 1;
+    }
+  }
+}
+
 class DisplayStatus {
   final List<DisplayType> supported;
   final DisplayType defaultDisplay;
@@ -12,11 +51,12 @@ class DisplayStatus {
   }) : defaultDisplay = defaultDisplay ?? supported.first,
        current = currentDisplay ?? defaultDisplay ?? supported.first;
 
-  static DisplayStatus card(DataType data) => deduce(data, asCard: true);
-  static DisplayStatus page(DataType data) => deduce(data, asCard: false);
+  static DisplayStatus card(DataType data) => deduce(data, size: .card);
+  static DisplayStatus page(DataType data) => deduce(data, size: .page);
+  static DisplayStatus cell(DataType data) => deduce(data, size: .cell);
 
-  static DisplayStatus deduce(DataType data, {required bool asCard}) {
-    final charLimit = asCard ? CARD_CHAR_LIMIT : PAGE_CHAR_LIMIT;
+  static DisplayStatus deduce(DataType data, {required DisplaySizeEnum size}) {
+    final charLimit = size.charLimit;
     switch (data) {
       case LiteralNull():
         return DisplayStatus([const DisplayNone()]);
@@ -34,14 +74,14 @@ class DisplayStatus {
         return DisplayStatus([
           DisplayMarkdown(value: showText),
           DisplayPlain(value: text),
-          if (asCard && (text.length >= 80 || text.contains("\n")))
+          if (size == .card && (text.length >= 80 || text.contains("\n")))
             DisplayFold(value: "<text length=${text.length}>"),
         ]);
       case CodeString obj:
         final text = ellipsisMessage(obj.data, limit: charLimit);
         return DisplayStatus([
           DisplayCode(value: text, lang: obj.lang),
-          if (asCard && (text.length >= 80 || text.contains("\n")))
+          if (size == .card && (text.length >= 80 || text.contains("\n")))
             DisplayFold(
               value: "<code lang=${obj.lang} length=${obj.data.length}>",
             ),
@@ -55,36 +95,47 @@ class DisplayStatus {
             lang: obj.webString.lang,
           ),
           DisplayPlain(value: obj.data),
-          if (asCard) DisplayFold(value: "<text length=${obj.data.length}>"),
+          if (size == .card)
+            DisplayFold(value: "<text length=${obj.data.length}>"),
         ]);
       case WebString obj:
         return DisplayStatus([
           DisplayWeb(html: obj.getHtml(), lang: obj.lang),
           DisplayCode(value: obj.toString(), lang: obj.lang),
-          if (asCard)
+          if (size == .card)
             DisplayFold(
               value: "<code lang=${obj.lang} length=${obj.data.length}>",
             ),
         ]);
       case StructuredData obj:
-        if (asCard) {
-          return DisplayStatus([
-            DisplayObject(obj),
-            DisplayCode(
-              getter: () => ellipsisMessage(obj.json, limit: charLimit),
-              lang: "json",
-            ),
-            DisplayFold(value: "<data length=${obj.data.length}>"),
-          ]);
-        } else {
-          return DisplayStatus([
-            DisplayExpand(keys: obj.compoundKeys.unwrap()),
-            DisplayObject(obj),
-            DisplayCode(
-              getter: () => ellipsisMessage(obj.json, limit: charLimit),
-              lang: "json",
-            ),
-          ]);
+        switch (size) {
+          case .card:
+            return DisplayStatus([
+              DisplayObject(obj),
+              DisplayCode(
+                getter: () => ellipsisMessage(obj.json, limit: charLimit),
+                lang: "json",
+              ),
+              DisplayFold(value: "<data length=${obj.data.length}>"),
+            ]);
+          case .page:
+            return DisplayStatus([
+              if (obj.pivotable)
+                DisplayTable(
+                  keys: obj.firstLevelKeys,
+                  columns:
+                      (obj[obj.firstLevelKeys.first].unwrap() as StructuredData)
+                          .firstLevelKeys,
+                ),
+              DisplayExpand(keys: obj.compoundKeys.unwrap()),
+              DisplayObject(obj),
+              DisplayCode(
+                getter: () => ellipsisMessage(obj.json, limit: charLimit),
+                lang: "json",
+              ),
+            ]);
+          case .cell:
+            throw UnimplementedError();
         }
     }
   }
@@ -190,4 +241,32 @@ class DisplayExpand extends DisplayType {
   }
   @override
   String get name => "expand";
+}
+
+class DisplayTable extends DisplayType {
+  final List<String> keys;
+  final List<String> columns;
+  late final List<String> sortedKeys;
+
+  DisplayTable({required this.keys, required this.columns}) {
+    final parsedKeys = keys.map((s) {
+      final first = s.split(DataPath.separator).first;
+      return (int.tryParse(first) ?? first, s);
+    }).toList();
+    parsedKeys.sort((a, b) {
+      final (a0, a1) = a;
+      final (b0, b1) = b;
+      if (a0 is int && b0 is int) {
+        return a0.compareTo(b0);
+      }
+      if (a0 is String && b0 is String) {
+        return a0.compareTo(b0);
+      }
+      return a0 is int ? -1 : 1;
+    });
+    sortedKeys = parsedKeys.map((e) => e.$2).toList();
+  }
+
+  @override
+  String get name => "table";
 }

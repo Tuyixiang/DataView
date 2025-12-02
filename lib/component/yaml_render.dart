@@ -132,8 +132,8 @@ class _YamlRenderState extends State<YamlRender> {
   }
 
   Widget displayTree(({InlineSpan? span, Widget? widget}) data) => Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: .min,
+    crossAxisAlignment: .start,
     children: [
       if (data.span != null) Text.rich(data.span!),
       if (data.widget != null) data.widget!,
@@ -193,7 +193,7 @@ class _YamlRenderState extends State<YamlRender> {
       }
       rows.add(
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: .start,
           children: [
             if (list.length >= 10) Text("$i: ", style: YamlTextStyles.symbol),
             if (list.length < 10) Text("- ", style: YamlTextStyles.symbol),
@@ -209,8 +209,8 @@ class _YamlRenderState extends State<YamlRender> {
     return (
       span: null,
       widget: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: .min,
+        crossAxisAlignment: .start,
         children: rows,
       ),
     );
@@ -237,7 +237,7 @@ class _YamlRenderState extends State<YamlRender> {
       rows.add(
         Column(
           mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: .min,
           children: [
             Container(
               alignment: Alignment.topLeft,
@@ -256,7 +256,7 @@ class _YamlRenderState extends State<YamlRender> {
             ),
             if (child.widget != null)
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: .start,
                 children: [
                   Text("  ", style: AppTextStyles.monospace),
                   Expanded(child: child.widget!),
@@ -269,8 +269,8 @@ class _YamlRenderState extends State<YamlRender> {
     return (
       span: null,
       widget: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: .min,
+        crossAxisAlignment: .start,
         children: rows,
       ),
     );
@@ -322,7 +322,7 @@ class _YamlRenderState extends State<YamlRender> {
       child: InkWell(
         onTap: () => showDataDialog(context, data: string),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: .min,
           children: [
             Text(
               "open",
@@ -348,7 +348,7 @@ class _YamlRenderState extends State<YamlRender> {
       return (
         span: span,
         widget: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: .start,
           children: [
             copiable(
               context: context,

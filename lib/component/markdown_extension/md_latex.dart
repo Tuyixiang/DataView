@@ -69,7 +69,7 @@ class LatexNode extends SpanNode {
       alignment: PlaceholderAlignment.middle,
       child: !isInline
           ? Container(
-              width: double.infinity,
+              width: .infinity,
               margin: EdgeInsets.symmetric(vertical: 16),
               child: Center(child: latex),
             )

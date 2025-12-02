@@ -50,8 +50,20 @@ sealed class DataType<T> {
 
   DisplayStatus? cardDisplay;
   DisplayStatus? pageDisplay;
+  DisplayStatus? cellDisplay;
 
   Object? get encodable => data;
+
+  DisplayStatus getDisplay(DisplaySizeEnum displaySize) {
+    switch (displaySize) {
+      case .card:
+        return cardDisplay ??= DisplayStatus.card(this);
+      case .page:
+        return pageDisplay ??= DisplayStatus.page(this);
+      case .cell:
+        return cellDisplay ??= DisplayStatus.cell(this);
+    }
+  }
 
   static DataType? deduceLink(String text, Lazy<List<String>> lines) {
     if (!text.startsWith("http://") ||
@@ -202,6 +214,8 @@ error: $e</pre>
     switch (data) {
       case DataType dt:
         return dt;
+      case Lazy lazy:
+        return deduce(lazy.unwrap());
       case null:
         return LiteralNull();
       case bool value:
@@ -281,6 +295,9 @@ class MixedWebString extends DataType<String> {
   final WebString webString;
 
   MixedWebString(super.data, this.webString);
+
+  @override
+  String toString() => data;
 }
 
 class WebString extends DataType<String> {

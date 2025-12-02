@@ -10,12 +10,12 @@ import "package:flutter_highlight/flutter_highlight.dart";
 import "package:flutter_highlight/themes/github.dart";
 import "package:markdown_widget/markdown_widget.dart";
 import "package:material_symbols_icons/symbols.dart";
+import "package:material_table_view/material_table_view.dart";
 import "package:styled_widget/styled_widget.dart";
 import "package:syntax_highlight/syntax_highlight.dart";
 
 // Project imports:
 import "package:frontend/common/common.dart";
-import "package:frontend/common/config.dart";
 import "package:frontend/component/common.dart";
 import "package:frontend/component/markdown_extension/md_code.dart";
 import "package:frontend/component/markdown_extension/md_html.dart";
@@ -30,12 +30,14 @@ import "package:frontend/data/backend/base_backend.dart";
 import "package:frontend/data/common.dart";
 import "package:frontend/data/data_path.dart";
 import "package:frontend/data/data_type.dart";
+import "package:frontend/data_view.dart";
 import "package:frontend/styles/base.dart";
 
 import "package:frontend/data/code_run/stub.dart"
     if (dart.library.io) "package:frontend/data/code_run/desktop.dart"
     if (dart.library.html) "package:frontend/data/code_run/web.dart";
 
+part "table_display.dart";
 part "text_display.dart";
 part "list_display.dart";
 part "web_display.dart";
@@ -44,13 +46,13 @@ class ItemDisplay extends StatefulWidget {
   final Backend dataSource;
   final DataPath path;
   final String? title;
-  final bool asCard;
+  final DisplaySizeEnum displaySize;
   final bool? preferSize;
   final void Function(DataPath?) callback;
 
-  int get charLimit => asCard ? CARD_CHAR_LIMIT : PAGE_CHAR_LIMIT;
-  int get stringLimit => asCard ? CARD_STRING_LIMIT : PAGE_STRING_LIMIT;
-  int get lineLimit => asCard ? 80 : 320;
+  int get charLimit => displaySize.charLimit;
+  int get stringLimit => displaySize.stringLimit;
+  int get lineLimit => displaySize.lineLimit;
 
   ItemDisplay({
     required this.dataSource,
@@ -58,8 +60,8 @@ class ItemDisplay extends StatefulWidget {
     this.title,
     this.callback = nullCallback1,
     this.preferSize,
-  }) : asCard = false,
-       super(key: ValueKey((dataSource, path)));
+    this.displaySize = .page,
+  }) : super(key: ValueKey((dataSource, path)));
 
   ItemDisplay.card({
     required this.dataSource,
@@ -67,7 +69,7 @@ class ItemDisplay extends StatefulWidget {
     this.title,
     this.callback = nullCallback1,
     this.preferSize,
-  }) : asCard = true,
+  }) : displaySize = .card,
        super(key: ValueKey((dataSource, path)));
 
   @override
@@ -85,9 +87,7 @@ class _ItemDisplayState extends State<ItemDisplay> {
 
   static final Map<String, DisplayType> displayCache = {};
 
-  DisplayStatus get displayStatus => widget.asCard
-      ? (data!.cardDisplay ??= DisplayStatus.card(data!))
-      : (data!.pageDisplay ??= DisplayStatus.page(data!));
+  DisplayStatus get displayStatus => data!.getDisplay(widget.displaySize);
 
   void updateData(DataType newData) {
     if (data == newData) {
@@ -140,7 +140,7 @@ class _ItemDisplayState extends State<ItemDisplay> {
         case null:
       }
     }
-    if (widget.asCard) {
+    if (widget.displaySize == .card) {
       return buildAsCard(context);
     }
     return Stack(
@@ -267,14 +267,14 @@ class _ItemDisplayState extends State<ItemDisplay> {
         icon: Icons.copy,
       ).onTap(() => copyToClipboard(context: context, text: data.toString())),
       // open button
-      if (widget.asCard)
+      if (widget.displaySize == .card)
         LabelCard(text: "open", icon: Icons.open_in_full, inverse: true).onTap(
           () {
             widget.callback(widget.path);
           },
         ),
       // menu button
-      if (!widget.asCard && data is StructuredData)
+      if (widget.displaySize == .page && data is StructuredData)
         LabelCard(
           text: "options",
           icon: Icons.more_horiz,
@@ -288,7 +288,7 @@ class _ItemDisplayState extends State<ItemDisplay> {
   Widget buildContent(BuildContext context) {
     switch (displayStatus.current) {
       case DisplayNone _:
-        return widget.asCard
+        return widget.displaySize == .card
             ? SizedBox.shrink()
             : buildPlainText(
                 context,
@@ -326,6 +326,12 @@ class _ItemDisplayState extends State<ItemDisplay> {
           stringLimit: widget.stringLimit,
           contentLimit: widget.lineLimit,
         ).constrained(maxWidth: AppLayout.centerMaxWidth).center().scrollable();
+      case DisplayTable display:
+        return buildTable(
+          context,
+          sortedKeys: display.sortedKeys,
+          columns: display.columns,
+        );
     }
   }
 }

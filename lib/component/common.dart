@@ -52,7 +52,7 @@ class LabelCard extends StatelessWidget {
       alignment: alignment,
       color: backgroundColor,
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           if (text != null)
             Text(

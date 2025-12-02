@@ -56,7 +56,7 @@ class CodeBlockExtendedNode extends CodeBlockNode {
         color: Theme.of(context).colorScheme.surfaceDim,
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: .center,
         children: [
           if (lang != null) LabelCard(text: lang),
           Spacer(),
@@ -143,8 +143,8 @@ class CodeBlockExtendedNode extends CodeBlockNode {
       if (lines.last.isEmpty) lines.removeLast();
       final lineNumberWidth = (log(lines.length) * log10e).ceil();
       codeWidget = Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: .min,
+        crossAxisAlignment: .start,
         children: List.generate(lines.length, (i) {
           final line = lines[i];
           final number = Text(
@@ -166,7 +166,7 @@ class CodeBlockExtendedNode extends CodeBlockNode {
             );
           }
           return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: .start,
             children: [
               number,
               Text(spaces, style: style),
@@ -182,13 +182,13 @@ class CodeBlockExtendedNode extends CodeBlockNode {
       decoration: preConfig.decoration,
       clipBehavior: Clip.antiAlias,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           buildBlockHeading(code: content, lang: language),
           Container(
             margin: preConfig.margin,
             padding: preConfig.padding,
-            width: double.infinity,
+            width: .infinity,
             child: codeWidget,
           ),
         ],

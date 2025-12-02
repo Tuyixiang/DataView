@@ -8,7 +8,7 @@ extension _PlainTextDisplay on _ItemDisplayState {
   }) =>
       Container(
             alignment: Alignment.centerLeft,
-            width: double.infinity,
+            width: .infinity,
             child: SelectableText(
               escapeAllSpecial(text),
               style: AppTextStyles.monospace.merge(style),
@@ -18,6 +18,18 @@ extension _PlainTextDisplay on _ItemDisplayState {
           .constrained(maxWidth: AppLayout.centerMaxWidth)
           .center()
           .scrollable();
+
+  // Widget buildSingleLinePlainText(
+  //   BuildContext context,
+  //   String text, {
+  //   TextStyle? style,
+  // }) => Text(
+  //   escapeAllSpecial(text),
+  //   style: AppTextStyles.monospace.merge(style),
+  //   maxLines: 1,
+  //   softWrap: false,
+  //   overflow: TextOverflow.fade,
+  // ).paddingDirectional(horizontal: 12, vertical: 8).center();
 }
 
 final highlighterSupportedLang = Map.fromEntries(
@@ -147,8 +159,8 @@ class _HighlightDisplayState extends State<HighlightDisplay> {
     );
 
     return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: .min,
+      crossAxisAlignment: .start,
       children: List.generate(lines.length, (i) {
         final spans = Queue<TextSpan>.from(lines[i]);
         int spaceCount = 0;
@@ -174,7 +186,7 @@ class _HighlightDisplayState extends State<HighlightDisplay> {
         }
         if (spaceCount == 0 || spaceCount >= 32) {
           return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: .start,
             children: [
               if (showNumber) number,
               Expanded(child: Text.rich(TextSpan(children: lines[i]))),
@@ -182,7 +194,7 @@ class _HighlightDisplayState extends State<HighlightDisplay> {
           );
         }
         return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: .start,
           children: [
             if (showNumber) number,
             Text(" " * spaceCount, style: numberStyle),
@@ -201,7 +213,7 @@ extension _HighlightedDisplay on _ItemDisplayState {
   Widget buildHighlighted(BuildContext context, String code, String lang) =>
       Container(
             alignment: Alignment.centerLeft,
-            width: double.infinity,
+            width: .infinity,
             child: HighlightDisplay(
               key: ObjectKey(code),
               text: code,
@@ -218,7 +230,7 @@ extension _MarkdownDisplay on _ItemDisplayState {
   Widget buildMarkdown(BuildContext context, String markdown) =>
       Container(
             alignment: Alignment.centerLeft,
-            width: double.infinity,
+            width: .infinity,
             child: MarkdownBlock(
               data: markdown,
               selectable: false,

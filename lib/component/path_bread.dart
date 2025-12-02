@@ -56,7 +56,7 @@ class _PathBreadState extends State<PathBread> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: .min,
       children: [
         buildRow(context, widget.path),
         if (dropMenu != null) buildMenu(context).expanded(),
@@ -151,19 +151,19 @@ class _PathBreadState extends State<PathBread> {
   Widget buildMenu(BuildContext context) => Column(
     children: [
       Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           SizedBox(
             width: dropMenu!.horizontalOffset,
-            height: double.infinity,
+            height: .infinity,
           ).onHover(closeMenu),
           Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: .min,
             children: [
               IntrinsicWidth(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: .stretch,
+                  mainAxisSize: .min,
                   children: dropMenu!.keys
                       .map(
                         (key) =>

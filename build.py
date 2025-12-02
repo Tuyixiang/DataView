@@ -43,12 +43,13 @@ def run_command(*command: str, **kwargs):
 
 
 def send_file(path: str, destination: str):
-    run_command(
-        "rsync",
-        "-azq",
-        path,
-        destination,
-    )
+    if destination:
+        run_command(
+            "rsync",
+            "-azq",
+            path,
+            destination,
+        )
 
 
 def write_remote_file(filename: str, destination: str, content: str | bytes):
@@ -81,8 +82,8 @@ def parse_args():
         "environment",
         nargs="?",
         default="all",
-        choices=["public", "test", "all"],
-        help="Build environment: public, test, or all (default: all)",
+        choices=["public", "test", "github", "all"],
+        help="Build environment: public, test, github or all (default: all)",
     )
     parser.add_argument(
         "--deploy",
@@ -184,7 +185,7 @@ if __name__ == "__main__":
                     "--release",
                     *format_dart_flags(env_args),
                 )
-                zipName = f"build/{version}.zip"
+                zipName = f"releases/{version}.zip"
                 pack_directory_to_zip(
                     "build/macos/Build/Products/Release/DataView.app",
                     zipName,
@@ -209,7 +210,7 @@ if __name__ == "__main__":
                     "--base-href",
                     base,
                 )
-                zipName = f"build/{version}.zip"
+                zipName = f"releases/{version}.zip"
                 pack_directory_to_zip(
                     "build/web",
                     zipName,

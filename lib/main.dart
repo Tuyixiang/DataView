@@ -187,12 +187,12 @@ class _MyHomePageState extends State<MyHomePage> {
       children: [
         Column(
               spacing: 12,
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: .min,
+              crossAxisAlignment: .center,
               children: [
-                SizedBox(width: double.infinity, height: 12),
+                SizedBox(width: .infinity, height: 12),
                 Text.rich(
-                  textAlign: TextAlign.center,
+                  textAlign: .center,
                   TextSpan(
                     children: [
                       TextSpan(
@@ -213,7 +213,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 Text.rich(
-                  textAlign: TextAlign.center,
+                  textAlign: .center,
                   TextSpan(
                     style: textTheme.bodyLarge?.copyWith(height: 1.6),
                     children: [
@@ -324,7 +324,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ],
                 ),
-                SizedBox(width: double.infinity, height: 12),
+                SizedBox(width: .infinity, height: 12),
               ],
             )
             .paddingDirectional(horizontal: 16)

@@ -40,7 +40,7 @@ class _WebViewState extends State<WebView> {
   @override
   Widget build(BuildContext context) => ConstrainedBox(
     constraints: BoxConstraints(
-      maxHeight: widget.fillHeight ? double.infinity : AppLayout.cardMaxHeight,
+      maxHeight: widget.fillHeight ? .infinity : AppLayout.cardMaxHeight,
     ),
     child: html == null
         ? SizedBox.expand()
@@ -93,7 +93,7 @@ window.addEventListener("unhandledrejection", function (event) {
               ).expanded(),
               if (errors.isNotEmpty)
                 Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: .min,
                   children: errors
                       .map(
                         (message) => Row(
