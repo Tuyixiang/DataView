@@ -8,10 +8,9 @@ import "package:flutter/material.dart";
 import "package:styled_widget/styled_widget.dart";
 
 // Project imports:
-import "package:frontend/common/common.dart";
 import "package:frontend/component/common.dart";
-import "package:frontend/data/backend/base_backend.dart";
 import "package:frontend/data/data_path.dart";
+import "package:frontend/overlay.dart";
 import "package:frontend/styles/base.dart";
 
 class DropMenuInfo {
@@ -33,16 +32,9 @@ class DropMenuInfo {
 ///
 /// Should be used as Stack overlay. Will show at the top-left corner
 class PathBread extends StatefulWidget with PositionInspect {
-  final Backend dataSource;
   final DataPath path;
-  final void Function(DataPath?) callback;
 
-  const PathBread({
-    super.key,
-    required this.dataSource,
-    required this.path,
-    this.callback = nullCallback1,
-  });
+  const PathBread({super.key, required this.path});
 
   @override
   State<PathBread> createState() => _PathBreadState();
@@ -76,7 +68,7 @@ class _PathBreadState extends State<PathBread> {
     // Try to measure the offset to put menu
     final widgetX = clickedWidget.renderPosition?.dx;
     final selfX = widget.renderPosition?.dx;
-    final keys = await widget.dataSource.listKeys(parent);
+    final keys = await getBackend().listKeys(parent);
     if ([widgetX, selfX, keys].contains(null)) {
       return;
     }
@@ -110,18 +102,20 @@ class _PathBreadState extends State<PathBread> {
       // Close button
       LabelCard(
         icon: Icons.close,
+        tooltip: "close file",
         inverse: true,
-      ).onTap(() => widget.callback(null)),
+      ).onTap(() => closeCallback()),
       // Back button
       LabelCard(
         icon: Icons.arrow_upward,
+        tooltip: path.isNotEmpty ? "parent" : null,
         disabled: path.isEmpty,
-      ).onTap(path.isEmpty ? () {} : () => widget.callback(path.parent)),
+      ).onTap(path.isEmpty ? () {} : () => openCallback(path.parent!)),
       // File
       LabelCard(
-        text: widget.dataSource.file ?? "data",
+        text: watchBackend().file ?? "data",
         maxLength: 16,
-      ).onTap(() => widget.callback(DataPath(""))),
+      ).onTap(() => openCallback(const DataPath(""))),
       // Paths
       ...path.iterate().expand((path) {
         late final PositionInspect card;
@@ -140,7 +134,7 @@ class _PathBreadState extends State<PathBread> {
                 openMenu(path.parent!, path.last, card);
               }
             },
-            child: labelCard.onTap(() => widget.callback(path)),
+            child: labelCard.onTap(() => openCallback(path)),
           ),
         );
         return [LabelCard(text: ">"), card];
@@ -172,7 +166,7 @@ class _PathBreadState extends State<PathBread> {
                               inverse: key == dropMenu!.select,
                               alignment: Alignment.centerLeft,
                             ).onTap(() {
-                              widget.callback(dropMenu!.parent.and(key));
+                              openCallback(dropMenu!.parent.and(key));
                             }),
                       )
                       .toList(),

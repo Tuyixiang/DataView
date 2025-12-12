@@ -24,8 +24,14 @@ class MenuAction {
 
 class PageMenu extends StatefulWidget {
   final bool activated;
+  final bool disabled;
   final List<MenuAction> actions;
-  const PageMenu({super.key, required this.actions, required this.activated});
+  const PageMenu({
+    super.key,
+    required this.actions,
+    required this.activated,
+    this.disabled = false,
+  });
 
   @override
   State<PageMenu> createState() => _PageMenuState();
@@ -56,7 +62,7 @@ class _PageMenuState extends State<PageMenu> {
                             text: action.name,
                             icon: action.icon,
                             inverse: action.inverse,
-                            disabled: action.disabled,
+                            disabled: widget.disabled || action.disabled,
                             alignment: AlignmentGeometry.centerRight,
                           ).onTap(action.callback),
                         )

@@ -2,7 +2,6 @@
 
 const CARD_CHAR_LIMIT = 65536;
 const PAGE_CHAR_LIMIT = 1048576;
-const CELL_CHAR_LIMIT = 128;
 const CARD_STRING_LIMIT = 1024;
 const PAGE_STRING_LIMIT = 2048;
 
@@ -17,6 +16,7 @@ const VERSION_NAME = String.fromEnvironment(
   defaultValue: "_unknown",
 );
 
+const CONTACT = String.fromEnvironment("CONTACT");
 const HELP_LINK = String.fromEnvironment("HELP_LINK");
 const NEWS_LINK = String.fromEnvironment("NEWS_LINK");
 const VERSION_LINK = String.fromEnvironment("VERSION_LINK");

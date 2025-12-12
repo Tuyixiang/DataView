@@ -16,7 +16,7 @@ import "package:frontend/data/sample_data.dart";
 
 final class DataSource extends ChangeNotifier {
   Backend? backend;
-  DataPath? initialPath;
+  DataPath initialPath;
 
   DataSource([this.backend, String? initialPath])
     : initialPath = DataPath(initialPath);

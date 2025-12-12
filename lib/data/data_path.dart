@@ -18,6 +18,7 @@ final class DataPath {
       : DataPath(path.substring(0, max(0, path.lastIndexOf(separator))));
 
   String get last => path.substring(path.lastIndexOf(separator) + 1);
+  String get lastNonPivot => last == pivotMark ? parent!.last : last;
 
   DataPath and(String sub) {
     if (path.isEmpty) {
@@ -60,6 +61,9 @@ final class DataPath {
 
   /// Escape key for use in [DataPath]
   static String escapeKey(String key) {
+    if (key.isEmpty) {
+      return "<empty>";
+    }
     if (key == DataPath.pivotMark) {
       return "%0";
     }

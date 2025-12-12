@@ -40,8 +40,25 @@ List<Map<String, dynamic>>? readFromTable(
   final width = table.map((e) => e.length).reduce(max);
   final columns = List.generate(
     width,
-    (i) => table[0].getOr(i, or: "column-$i").toString(),
+    (i) => table[0].getOr(i, or: "_$i").toString(),
   );
+  // Rename duplicate columns
+  final columnCount = <String, int>{};
+  for (final c in columns) {
+    columnCount[c] = (columnCount[c] ?? 0) + 1;
+  }
+  for (final i in range(width)) {
+    final c = columns[i];
+    if (columnCount[c]! > 1) {
+      var j = 0;
+      String newName;
+      do {
+        newName = "$c-$j";
+        j += 1;
+      } while (columns.contains(newName));
+      columns[i] = newName;
+    }
+  }
   final rows = table.skip(1);
   return rows
       .map((row) => {for (final i in range(width)) columns[i]: row.getOr(i)})
@@ -123,7 +140,7 @@ Future<Object?> parseData(
         );
       default:
         return await utf8.decodeStream(data);
-        // return exceptionCallback("Unsupported type: $extension");
+      // return exceptionCallback("Unsupported type: $extension");
     }
   } on FormatException catch (e) {
     return exceptionCallback("Failed to read data: ${e.message}");

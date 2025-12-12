@@ -59,6 +59,10 @@ void nullCallback() {}
 
 void nullCallback1(_) {}
 
+Never unreachableCallback() => throw UnimplementedError();
+
+Never unreachableCallback1(_) => throw UnimplementedError();
+
 Never _mustProvide(_) => throw FormatException();
 
 T identity<T>(T v) => v;
@@ -190,4 +194,21 @@ class SingleUseWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _build(context);
+}
+
+class SingleUseStatefulWidget extends StatefulWidget {
+  final Widget Function(BuildContext, State<SingleUseStatefulWidget>) _build;
+
+  const SingleUseStatefulWidget(
+    Widget Function(BuildContext, State<SingleUseStatefulWidget>) build, {
+    super.key,
+  }) : _build = build;
+
+  @override
+  State<StatefulWidget> createState() => _SingleUseStatefulWidgetState();
+}
+
+class _SingleUseStatefulWidgetState extends State<SingleUseStatefulWidget> {
+  @override
+  Widget build(BuildContext context) => widget._build(context, this);
 }

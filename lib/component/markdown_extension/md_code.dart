@@ -14,7 +14,6 @@ import "package:frontend/common/config.dart";
 import "package:frontend/common/platform.dart";
 import "package:frontend/component/common.dart";
 import "package:frontend/component/item_display.dart";
-import "package:frontend/data_view.dart";
 
 import "package:frontend/data/code_run/stub.dart"
     if (dart.library.io) "package:frontend/data/code_run/desktop.dart"
@@ -50,8 +49,8 @@ class CodeBlockExtendedNode extends CodeBlockNode {
   Widget buildBlockHeading({
     String? lang,
     required String code,
-  }) => SingleUseWidget(
-    (context) => Container(
+  }) => SingleUseStatefulWidget(
+    (context, state) => Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceDim,
       ),
@@ -63,24 +62,23 @@ class CodeBlockExtendedNode extends CodeBlockNode {
           // Preview button for json or yaml
           if (["json", "yaml"].contains(lang))
             LabelCard(text: "preview", icon: Icons.open_in_browser).onTap(() {
-              showDataDialog(
-                context,
-                title: "Data Preview",
-                data: code,
-              );
+              state.showDataDialog(titles: ["Data Preview"], data: code);
             }),
           // Preview button for html and jsx
           if (["html", if (TEST_FEATURES) "jsx"].contains(lang))
             LabelCard(text: "preview", icon: Icons.open_in_browser).onTap(() {
-              showDataDialog(
-                context,
-                title: "Web Preview",
+              state.showDataDialog(
+                titles: ["Web Preview"],
                 data: "```$lang\n$code\n```",
               );
             }),
           // Run button for python
           if (kIsMac && ["py", "python", "python3"].contains(lang))
-            LabelCard(text: "run", icon: Icons.terminal).onTap(() {
+            LabelCard(
+              text: "run",
+              icon: Icons.terminal,
+              tooltip: "run in terminal",
+            ).onTap(() {
               executePython(code).catchError((e) {
                 if (context.mounted) {
                   showSnackBar(context, e.toString());
@@ -89,7 +87,11 @@ class CodeBlockExtendedNode extends CodeBlockNode {
             }),
           // Run button for cpp
           if (kIsMac && ["cpp", "c++"].contains(lang))
-            LabelCard(text: "run", icon: Icons.terminal).onTap(() {
+            LabelCard(
+              text: "run",
+              icon: Icons.terminal,
+              tooltip: "run in terminal",
+            ).onTap(() {
               executeCpp(code).catchError((e) {
                 if (context.mounted) {
                   showSnackBar(context, e.toString());
@@ -98,7 +100,8 @@ class CodeBlockExtendedNode extends CodeBlockNode {
             }),
           LabelCard(
             icon: Icons.copy,
-          ).onTap(() => copyToClipboard(context: context, text: code)),
+            tooltip: "copy",
+          ).onTap(() => state.copyToClipboard(code)),
         ],
       ),
     ),

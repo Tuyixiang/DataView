@@ -3,7 +3,7 @@ part of "data_type.dart";
 enum DisplaySizeEnum {
   card,
   page,
-  cell;
+  preview;
 
   int get charLimit {
     switch (this) {
@@ -11,8 +11,8 @@ enum DisplaySizeEnum {
         return CARD_CHAR_LIMIT;
       case .page:
         return PAGE_CHAR_LIMIT;
-      case .cell:
-        return CELL_CHAR_LIMIT;
+      case .preview:
+        return CARD_CHAR_LIMIT;
     }
   }
 
@@ -22,8 +22,8 @@ enum DisplaySizeEnum {
         return CARD_STRING_LIMIT;
       case .page:
         return PAGE_STRING_LIMIT;
-      case .cell:
-        return CELL_CHAR_LIMIT;
+      case .preview:
+        return CARD_STRING_LIMIT;
     }
   }
 
@@ -33,8 +33,8 @@ enum DisplaySizeEnum {
         return 80;
       case .page:
         return 320;
-      case .cell:
-        return 1;
+      case .preview:
+        return 80;
     }
   }
 }
@@ -53,7 +53,7 @@ class DisplayStatus {
 
   static DisplayStatus card(DataType data) => deduce(data, size: .card);
   static DisplayStatus page(DataType data) => deduce(data, size: .page);
-  static DisplayStatus cell(DataType data) => deduce(data, size: .cell);
+  static DisplayStatus preview(DataType data) => deduce(data, size: .preview);
 
   static DisplayStatus deduce(DataType data, {required DisplaySizeEnum size}) {
     final charLimit = size.charLimit;
@@ -111,6 +111,13 @@ class DisplayStatus {
         switch (size) {
           case .card:
             return DisplayStatus([
+              if (obj.pivotable)
+                DisplayTable(
+                  keys: obj.firstLevelKeys,
+                  columns:
+                      (obj[obj.firstLevelKeys.first].unwrap() as StructuredData)
+                          .firstLevelKeys,
+                ),
               DisplayObject(obj),
               DisplayCode(
                 getter: () => ellipsisMessage(obj.json, limit: charLimit),
@@ -134,8 +141,22 @@ class DisplayStatus {
                 lang: "json",
               ),
             ]);
-          case .cell:
-            throw UnimplementedError();
+          case .preview:
+            return DisplayStatus([
+              if (obj.pivotable)
+                DisplayTable(
+                  keys: obj.firstLevelKeys,
+                  columns:
+                      (obj[obj.firstLevelKeys.first].unwrap() as StructuredData)
+                          .firstLevelKeys,
+                ),
+              DisplayObject(obj),
+              DisplayExpand(keys: obj.compoundKeys.unwrap()),
+              DisplayCode(
+                getter: () => ellipsisMessage(obj.json, limit: charLimit),
+                lang: "json",
+              ),
+            ]);
         }
     }
   }
@@ -149,8 +170,8 @@ sealed class DisplayType {
   String get name;
   String get content => value ?? getter!();
 
-  bool get supportBrowserOpen => false;
-  Future<String> get browserOpenHtml => throw UnimplementedError();
+  /// Copy display styles from another item
+  void copyStyleFrom(DisplayType other) {}
 
   @override
   bool operator ==(Object other) => runtimeType == other.runtimeType;
@@ -206,10 +227,6 @@ class DisplayWeb extends DisplayType {
   const DisplayWeb({required this.html, required this.lang});
   @override
   String get name => "preview";
-  @override
-  bool get supportBrowserOpen => true;
-  @override
-  Future<String> get browserOpenHtml => html;
 }
 
 class DisplayFold extends DisplayType {
@@ -221,6 +238,7 @@ class DisplayFold extends DisplayType {
 class DisplayExpand extends DisplayType {
   final List<String> keys;
   late final List<String> sortedKeys;
+
   DisplayExpand({required this.keys}) {
     final parsedKeys = keys.map((s) {
       final first = s.split(DataPath.separator).first;
@@ -247,8 +265,14 @@ class DisplayTable extends DisplayType {
   final List<String> keys;
   final List<String> columns;
   late final List<String> sortedKeys;
+  bool isHorizontal;
+  (String row, String col)? previewItem;
 
-  DisplayTable({required this.keys, required this.columns}) {
+  DisplayTable({
+    required this.keys,
+    required this.columns,
+    this.isHorizontal = true,
+  }) {
     final parsedKeys = keys.map((s) {
       final first = s.split(DataPath.separator).first;
       return (int.tryParse(first) ?? first, s);
@@ -269,4 +293,11 @@ class DisplayTable extends DisplayType {
 
   @override
   String get name => "table";
+
+  @override
+  void copyStyleFrom(DisplayType other) {
+    other = other as DisplayTable;
+    isHorizontal = other.isHorizontal;
+    previewItem = other.previewItem;
+  }
 }

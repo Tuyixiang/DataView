@@ -11,6 +11,7 @@ extension InverseColor on TextStyle {
 class AppLayout {
   static const double centerMaxWidth = 960;
   static const double cardMaxHeight = 600;
+  static const double previewMinHeight = 120;
   static const double labelHeight = 24;
 }
 

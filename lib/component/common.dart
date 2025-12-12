@@ -1,10 +1,15 @@
 // Flutter imports:
 import "package:flutter/material.dart";
 
+// Package imports:
+import "package:provider/provider.dart";
+
 // Project imports:
 import "package:frontend/common/common.dart";
+import "package:frontend/data/backend/base_backend.dart";
 import "package:frontend/data/clipboard/desktop.dart";
-import "package:frontend/data_view.dart";
+import "package:frontend/data/data_path.dart";
+import "package:frontend/overlay.dart";
 import "package:frontend/styles/base.dart";
 
 import "package:frontend/data/url/stub.dart"
@@ -18,6 +23,7 @@ class LabelCard extends StatelessWidget {
   final bool disabled;
   final TextStyle? style;
   final AlignmentGeometry? alignment;
+  final String? tooltip;
 
   const LabelCard({
     this.text,
@@ -28,6 +34,7 @@ class LabelCard extends StatelessWidget {
     this.disabled = false,
     this.style,
     this.alignment,
+    this.tooltip,
   });
 
   List<FontVariation>? get textVariation {
@@ -46,7 +53,7 @@ class LabelCard extends StatelessWidget {
     final contentColor = (inverse ? colors.onPrimary : colors.onSurface)
         .withAlpha(disabled ? 128 : 255);
     final backgroundColor = inverse ? colors.primary : colors.surfaceDim;
-    return Container(
+    final widget = Container(
       height: AppLayout.labelHeight,
       padding: const EdgeInsets.symmetric(horizontal: 6),
       alignment: alignment,
@@ -70,6 +77,19 @@ class LabelCard extends StatelessWidget {
             ),
         ],
       ),
+    );
+    if (tooltip == null) {
+      return widget;
+    }
+    return Tooltip(
+      message: tooltip,
+      verticalOffset: AppLayout.labelHeight / 2,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.inverseSurface,
+      ),
+      showDuration: .zero,
+      exitDuration: .zero,
+      child: widget,
     );
   }
 }
@@ -113,17 +133,16 @@ void showSnackBar(BuildContext context, String message, {int seconds = 1}) {
   }
 }
 
-void copyToClipboard({
-  required BuildContext context,
-  required String text,
-}) async {
-  final origin = getCurrentUrl()?.origin ?? "http://this-website:port";
-  final result = await writeToClipboard(text)
-      .then((_) => "Copied to clipboard")
-      .catchError((e) {
-        if (context.mounted) {
+extension StateExt on State {
+  Backend getBackend() => context.read<DataSource>().backend!;
+  Backend watchBackend() => context.watch<DataSource>().backend!;
+
+  void copyToClipboard(String text) async {
+    final origin = getCurrentUrl()?.origin ?? "http://this-website:port";
+    final result = await writeToClipboard(text)
+        .then((_) => "Copied to clipboard")
+        .catchError((e) {
           showDataDialog(
-            context,
             data: {
               "English":
                   """
@@ -163,12 +182,24 @@ $origin
 """,
             },
           );
-        }
-        return "Failed to copy to clipboard";
-      });
-  if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(result), duration: Duration(seconds: 1)),
-    );
+          return "Failed to copy to clipboard";
+        });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result), duration: Duration(seconds: 1)),
+      );
+    }
+  }
+
+  void showDataDialog({
+    List<String> titles = const [],
+    Object? data,
+    DataPath? path,
+  }) {
+    if (!mounted) {
+      return;
+    }
+    final source = DataSource(MemoryBackend.fromObject(data));
+    return previewCallback(source.initialPath, backend: source.backend!);
   }
 }

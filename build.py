@@ -16,7 +16,7 @@ import yaml
 from tempfile import TemporaryDirectory
 
 TARGETS: list[Literal["web", "mac"]] = []
-ENVS: list[Literal["public", "test"]] = []
+ENVS: list[Literal["public", "test", "github"]] = []
 DEPLOY: bool = False
 NIGHTLY: str = ""
 
@@ -104,7 +104,7 @@ def parse_args():
         TARGETS = [args.target]
 
     if args.environment == "all":
-        ENVS = ["public", "test"]
+        ENVS = ["public", "test", "github"]
     else:
         ENVS = [args.environment]
 
@@ -178,6 +178,8 @@ if __name__ == "__main__":
                 if sys.platform != "darwin":
                     print_highlight("Not on macOS platform, skipping build")
                     break
+                if env == "github":
+                    continue
                 run_command(
                     "flutter",
                     "build",

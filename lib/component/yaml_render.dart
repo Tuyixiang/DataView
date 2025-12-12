@@ -16,7 +16,6 @@ import "package:frontend/component/text/escape.dart";
 import "package:frontend/data/common.dart";
 import "package:frontend/data/data_path.dart";
 import "package:frontend/data/data_type.dart";
-import "package:frontend/data_view.dart";
 import "package:frontend/styles/base.dart";
 
 /// Reference: [githubTheme]
@@ -83,20 +82,9 @@ TextSpan highlightEscape(String text, TextStyle style) {
   return TextSpan(children: spans);
 }
 
-Widget copiable({
-  required BuildContext context,
-  required String text,
-  String? displayText,
-  required TextStyle style,
-}) => InkWell(
-  onTap: () => copyToClipboard(context: context, text: text),
-  hoverColor: style.color?.withAlpha(16) ?? Color(0x20808080),
-  splashColor: Colors.transparent,
-  child: Text.rich(highlightEscape(displayText ?? text, style)),
-);
-
 class YamlRender extends StatefulWidget {
   final DataType data;
+  final DisplayObject display;
 
   /// All strings will be truncated at this limit
   final int stringLimit;
@@ -104,12 +92,12 @@ class YamlRender extends StatefulWidget {
   /// Estimated total lines of display
   final int contentLimit;
 
-  const YamlRender(
-    this.data, {
+  YamlRender(
+    this.display, {
     super.key,
     this.stringLimit = PAGE_STRING_LIMIT,
     this.contentLimit = 160,
-  });
+  }) : data = display.data;
 
   @override
   State<YamlRender> createState() => _YamlRenderState();
@@ -140,8 +128,20 @@ class _YamlRenderState extends State<YamlRender> {
     ],
   );
 
+  Widget buildCopiable({
+    required BuildContext context,
+    required String text,
+    String? displayText,
+    required TextStyle style,
+  }) => InkWell(
+    onTap: () => copyToClipboard(text),
+    hoverColor: style.color?.withAlpha(16) ?? Color(0x20808080),
+    splashColor: Colors.transparent,
+    child: Text.rich(highlightEscape(displayText ?? text, style)),
+  );
+
   Widget buildEllipsisMessage(String message, DataType data) => InkWell(
-    onTap: () => showDataDialog(context, data: data),
+    onTap: () => showDataDialog(data: data),
     hoverColor: Color(0x40808080),
     child: Text(message, style: YamlTextStyles.ellipsis),
   );
@@ -307,7 +307,7 @@ class _YamlRenderState extends State<YamlRender> {
       return (
         span: WidgetSpan(
           alignment: PlaceholderAlignment.middle,
-          child: copiable(
+          child: buildCopiable(
             context: context,
             text: string,
             displayText: displayString,
@@ -320,12 +320,12 @@ class _YamlRenderState extends State<YamlRender> {
     final span = WidgetSpan(
       alignment: PlaceholderAlignment.middle,
       child: InkWell(
-        onTap: () => showDataDialog(context, data: string),
+        onTap: () => showDataDialog(data: string),
         child: Row(
           mainAxisSize: .min,
           children: [
             Text(
-              "open",
+              "preview",
               style: (Theme.of(context).textTheme.bodyMedium ?? TextStyle())
                   .copyWith(
                     color: Colors.white,
@@ -333,7 +333,7 @@ class _YamlRenderState extends State<YamlRender> {
                   ),
             ).padding(left: 4),
             Icon(
-              Icons.open_in_full,
+              Icons.open_in_browser,
               size: AppTextStyles.monospace.fontSize,
               color: Colors.white,
             ).paddingDirectional(all: 2),
@@ -350,7 +350,7 @@ class _YamlRenderState extends State<YamlRender> {
         widget: Column(
           crossAxisAlignment: .start,
           children: [
-            copiable(
+            buildCopiable(
               context: context,
               text: string,
               style: YamlTextStyles.string,
@@ -366,7 +366,7 @@ class _YamlRenderState extends State<YamlRender> {
     }
     return (
       span: span,
-      widget: copiable(
+      widget: buildCopiable(
         context: context,
         text: string,
         style: YamlTextStyles.string,
@@ -381,7 +381,7 @@ class _YamlRenderState extends State<YamlRender> {
       case LiteralNum():
         return WidgetSpan(
           alignment: PlaceholderAlignment.middle,
-          child: copiable(
+          child: buildCopiable(
             context: context,
             text: data.toString(),
             style: YamlTextStyles.number,

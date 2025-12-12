@@ -21,6 +21,7 @@ import "package:frontend/data/backend/base_backend.dart";
 import "package:frontend/data/loader.dart";
 import "package:frontend/data/pick_file.dart";
 import "package:frontend/data/sample_data.dart";
+import "package:frontend/overlay.dart";
 import "package:frontend/styles/base.dart";
 import "package:frontend/version_note.dart";
 import "data_view.dart";
@@ -28,7 +29,6 @@ import "data_view.dart";
 import "package:frontend/window/stub.dart"
     if (dart.library.html) "package:frontend/window/web.dart"
     if (dart.library.io) "package:frontend/window/desktop.dart";
-
 
 import "package:frontend/data/url/stub.dart"
     if (dart.library.html) "package:frontend/data/url/web.dart";
@@ -158,6 +158,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final inputController = TextEditingController();
+  DataSource? overlayData;
 
   Future<void> pickOpenFile() async {
     final result = await pickFiles();
@@ -204,7 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                       ),
                       TextSpan(
-                        text: "by tuyixiang@baidu.com",
+                        text: "by $CONTACT",
                         style: textTheme.bodyLarge?.copyWith(
                           color: Theme.of(context).primaryColor,
                         ),
@@ -427,10 +428,34 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             child: source.isEmpty
                 ? buildInitial(context)
-                : DataView(
-                    key: ObjectKey(source.backend),
-                    initialSource: source,
-                    exitCallback: source.update,
+                : Provider.value(
+                    value: PreviewStatus(
+                      nav: .main,
+                      previewCallback: (path, {Backend? backend}) =>
+                          setState(() {
+                            overlayData = path == null
+                                ? null
+                                : DataSource(
+                                    backend ??
+                                        overlayData?.backend ??
+                                        source.backend!,
+                                    path.path,
+                                  );
+                          }),
+                      closeCallback: () {
+                        overlayData = null;
+                        source.update();
+                      },
+                    ),
+                    child: Stack(
+                      children: [
+                        DataView(
+                          key: ObjectKey(source.backend),
+                          initialSource: source,
+                        ),
+                        OverlayView(source: overlayData),
+                      ],
+                    ),
                   ),
           ),
         ),

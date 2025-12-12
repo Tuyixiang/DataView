@@ -1,11 +1,7 @@
 part of "item_display.dart";
 
 extension _PlainTextDisplay on _ItemDisplayState {
-  Widget buildPlainText(
-    BuildContext context,
-    String text, {
-    TextStyle? style,
-  }) =>
+  Widget buildPlainText(String text, {TextStyle? style}) =>
       Container(
             alignment: Alignment.centerLeft,
             width: .infinity,
@@ -210,14 +206,14 @@ class _HighlightDisplayState extends State<HighlightDisplay> {
 }
 
 extension _HighlightedDisplay on _ItemDisplayState {
-  Widget buildHighlighted(BuildContext context, String code, String lang) =>
+  Widget buildHighlighted(DisplayCode display) =>
       Container(
             alignment: Alignment.centerLeft,
             width: .infinity,
             child: HighlightDisplay(
-              key: ObjectKey(code),
-              text: code,
-              lang: lang,
+              key: ObjectKey(display.content),
+              text: display.content,
+              lang: display.lang,
             ),
           )
           .paddingDirectional(horizontal: 12, vertical: 8)
@@ -227,12 +223,12 @@ extension _HighlightedDisplay on _ItemDisplayState {
 }
 
 extension _MarkdownDisplay on _ItemDisplayState {
-  Widget buildMarkdown(BuildContext context, String markdown) =>
+  Widget buildMarkdown(DisplayMarkdown display) =>
       Container(
             alignment: Alignment.centerLeft,
             width: .infinity,
             child: MarkdownBlock(
-              data: markdown,
+              data: display.content,
               selectable: false,
               generator: MarkdownGenerator(
                 generators: [

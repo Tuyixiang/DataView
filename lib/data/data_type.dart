@@ -60,8 +60,8 @@ sealed class DataType<T> {
         return cardDisplay ??= DisplayStatus.card(this);
       case .page:
         return pageDisplay ??= DisplayStatus.page(this);
-      case .cell:
-        return cellDisplay ??= DisplayStatus.cell(this);
+      case .preview:
+        return cellDisplay ??= DisplayStatus.preview(this);
     }
   }
 
@@ -104,8 +104,10 @@ error: $e</pre>
       if ("[{".contains(text.substring(0, 1))) {
         parsed = json5Decode(text);
       } else if (text.startsWith("- ") ||
-          text.startsWith(RegExp(r"[^\s:]+: .+\n"))) {
+          text.startsWith(RegExp(r"[^\s:]+:( .+)?\n"))) {
         parsed = yamlDecode(text);
+      } else if (text.length < 20) {
+        parsed = jsonDecode(text.trim().toLowerCase());
       } else {
         return null;
       }

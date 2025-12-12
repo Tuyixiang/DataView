@@ -5,22 +5,19 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
 // Project imports:
-import "package:frontend/common/common.dart";
+import "package:frontend/component/common.dart";
 import "package:frontend/component/item_display.dart";
 import "package:frontend/component/path_bread.dart";
 import "package:frontend/data/backend/base_backend.dart";
 import "package:frontend/data/data_path.dart";
 import "package:frontend/data/data_type.dart";
+import "package:frontend/overlay.dart";
 
 class DataView extends StatefulWidget {
   final DataSource initialSource;
-  final void Function() exitCallback;
+  final bool expand;
 
-  const DataView({
-    super.key,
-    required this.initialSource,
-    this.exitCallback = nullCallback,
-  });
+  const DataView({super.key, required this.initialSource, this.expand = true});
 
   @override
   State<DataView> createState() => _ViewState();
@@ -42,13 +39,12 @@ class _ViewState extends State<DataView> {
 
   void openPath(DataPath? newPath, {Backend? backend}) async {
     if (newPath == null) {
-      return widget.exitCallback();
+      return closeCallback();
     }
     if (path == newPath) {
       return;
     }
-    final newData = await (backend ?? context.read<DataSource>().backend!)
-        .readData(newPath);
+    final newData = await (backend ?? getBackend()).readData(newPath);
     setState(() {
       pathBreadKey = GlobalKey();
       path = newPath;
@@ -57,48 +53,29 @@ class _ViewState extends State<DataView> {
   }
 
   @override
-  Widget build(BuildContext context) => path != null
-      ? Stack(
-          children: [
-            ItemDisplay(
-              dataSource: context.watch<DataSource>().backend!,
-              path: path!,
-              callback: openPath,
-            ),
-            PathBread(
-              key: pathBreadKey,
-              dataSource: context.watch<DataSource>().backend!,
-              path: path!,
-              callback: openPath,
-            ),
-          ],
-        )
-      : SizedBox.expand();
-}
-
-Future<void> showDataDialog(
-  BuildContext context, {
-  String? title,
-  required dynamic data,
-}) {
-  final source = DataSource(MemoryBackend.fromObject(data, file: title));
-  return showDialog(
-    context: context,
-    builder: (context) => Dialog(
-      insetPadding: EdgeInsets.all(24),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(8)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: ChangeNotifierProvider.value(
-        value: source,
-        child: DataView(
-          initialSource: DataSource(
-            MemoryBackend.fromObject(data, file: title),
-          ),
-          exitCallback: () => Navigator.of(context).pop(),
+  Widget build(BuildContext context) {
+    if (path == null) {
+      return SizedBox.expand();
+    }
+    final child = Stack(
+      children: [
+        ItemDisplay(
+          key: ValueKey((watchBackend(), path)),
+          path: path!,
+          titles: path!.isEmpty ? [] : [path!.last],
+          displaySize: .page,
         ),
+        PathBread(key: pathBreadKey, path: path!),
+      ],
+    );
+    return Provider.value(
+      value: previewStatus.child(
+        openCallback: (path, {backend}) {
+          openPath(path, backend: backend);
+          previewCallback(null);
+        },
       ),
-    ),
-  );
+      child: child,
+    );
+  }
 }

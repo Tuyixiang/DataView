@@ -8,10 +8,22 @@ import "package:frontend/data/code_run/stdcpp.dart";
 Future<void> runScript(String dir, File scriptFile, File statusFile) async {
   final appleScript =
       """
-tell application "Terminal"
-    do script "clear && cd $dir && bash ${scriptFile.path}; echo \$? > ${statusFile.path}; cd ~;"
-    activate
-end tell
+set theCmd to "clear && cd $dir && bash ${scriptFile.path}; echo \$? > ${statusFile.path}; cd ~;"
+
+if application "iTerm" exists then
+    -- Prefer iTerm2
+    tell application "iTerm"
+        activate
+        set newWindow to (create window with default profile)
+        tell newWindow's current session to write text theCmd
+    end tell
+else
+    -- Fallback to Terminal
+    tell application "Terminal"
+        do script theCmd
+        activate
+    end tell
+end if
 """;
 
   await Process.run("osascript", ["-e", appleScript]);
